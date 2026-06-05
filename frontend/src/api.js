@@ -1,4 +1,12 @@
-const API_BASE = "/api";
+const getApiBase = () => {
+  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+    if (window.location.port === "5173") {
+      return "http://localhost:8000/api";
+    }
+  }
+  return window.location.origin + "/api";
+};
+const API_BASE = getApiBase();
 
 function getHeaders() {
   const headers = {
