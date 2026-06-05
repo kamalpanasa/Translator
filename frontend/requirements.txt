@@ -1,0 +1,24 @@
+# UI & Core
+streamlit>=1.32.0
+
+# Speech to Text
+SpeechRecognition>=3.10.0
+openai-whisper>=20231117
+setuptools
+
+# Text to Speech
+gTTS>=2.5.0
+
+# OCR
+easyocr>=1.7.1
+
+# Translation
+deep-translator>=1.11.4
+
+# Vision / Image
+opencv-python-headless>=4.9.0.80
+Pillow>=10.2.0
+
+# Data / Audio / Visuals
+numpy>=1.26.0
+plotly>=5.20.0
