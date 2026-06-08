@@ -19,8 +19,13 @@ const getApiBase = () => {
     return `https://${username}-${spaceName}.hf.space/api`;
   }
 
-  // 3. Fallback to current origin (should be xxx.hf.space)
-  return window.location.origin + "/api";
+  // 3. If running on Hugging Face subdomain directly
+  if (host.endsWith(".hf.space")) {
+    return window.location.origin + "/api";
+  }
+
+  // 4. If running on Vercel or other custom hosting, point to the Hugging Face Space backend
+  return "https://sunless007-translator-backend.hf.space/api";
 };
 const API_BASE = getApiBase();
 
