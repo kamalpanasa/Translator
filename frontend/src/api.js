@@ -1,9 +1,25 @@
 const getApiBase = () => {
-  if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+  const host = window.location.hostname;
+  const href = window.location.href;
+
+  // 1. If running on localhost, point to local FastAPI
+  if (host === "localhost" || host === "127.0.0.1") {
     if (window.location.port === "5173") {
       return "http://localhost:8000/api";
     }
+    return "/api";
   }
+
+  // 2. If running inside Hugging Face spaces iframe or parent page
+  // Path format: huggingface.co/spaces/username/space-name
+  const spacesMatch = href.match(/huggingface\.co\/spaces\/([^/]+)\/([^/]+)/);
+  if (spacesMatch) {
+    const username = spacesMatch[1].toLowerCase().replace(/_/g, "-");
+    const spaceName = spacesMatch[2].toLowerCase().replace(/_/g, "-");
+    return `https://${username}-${spaceName}.hf.space/api`;
+  }
+
+  // 3. Fallback to current origin (should be xxx.hf.space)
   return window.location.origin + "/api";
 };
 const API_BASE = getApiBase();
