@@ -92,21 +92,62 @@ def chunk_text(text: str, chunk_size: int = 700, chunk_overlap: int = 100) -> li
     return chunks
 
 
+_embedding_model_name = None
+
+def _get_embedding_model_name(api_key: str) -> str:
+    global _embedding_model_name
+    if _embedding_model_name is not None:
+        return _embedding_model_name
+        
+    genai.configure(api_key=api_key)
+    try:
+        models = genai.list_models()
+        embedding_models = [
+            m.name for m in models 
+            if "embedContent" in m.supported_generation_methods
+        ]
+        
+        # Priority order for text embeddings
+        preferred = ["models/text-embedding-004", "models/gemini-embedding-001"]
+        for pref in preferred:
+            if pref in embedding_models:
+                _embedding_model_name = pref
+                return _embedding_model_name
+            elif pref.replace("models/", "") in embedding_models:
+                _embedding_model_name = pref.replace("models/", "")
+                return _embedding_model_name
+                
+        # Fallback to any model containing 'embedding'
+        for m in embedding_models:
+            if "embedding" in m.lower():
+                _embedding_model_name = m
+                return _embedding_model_name
+                
+        if embedding_models:
+            _embedding_model_name = embedding_models[0]
+            return _embedding_model_name
+    except Exception as e:
+        print("Error listing embedding models, falling back to models/text-embedding-004:", e)
+        
+    _embedding_model_name = "models/text-embedding-004"
+    return _embedding_model_name
+
 def get_embedding(text: str, api_key: str, is_query: bool = False) -> list[float]:
     """
     Generates embedding vector for a text string using Gemini API.
     """
     genai.configure(api_key=api_key)
+    model_name = _get_embedding_model_name(api_key)
     task_type = "retrieval_query" if is_query else "retrieval_document"
     try:
         response = genai.embed_content(
-            model="models/embedding-001",
+            model=model_name,
             content=text,
             task_type=task_type
         )
         return response["embedding"]
     except Exception as e:
-        print(f"Gemini embedding error: {e}")
+        print(f"Gemini embedding error with model {model_name}: {e}")
         raise RuntimeError(f"Embedding failed: {str(e)}")
 
 
@@ -115,15 +156,16 @@ def get_embeddings_batch(texts: list[str], api_key: str) -> list[list[float]]:
     Generates embedding vectors in batches for speed.
     """
     genai.configure(api_key=api_key)
+    model_name = _get_embedding_model_name(api_key)
     try:
         response = genai.embed_content(
-            model="models/embedding-001",
+            model=model_name,
             content=texts,
             task_type="retrieval_document"
         )
         return response["embedding"]
     except Exception as e:
-        print(f"Gemini batch embedding error: {e}")
+        print(f"Gemini batch embedding error with model {model_name}: {e}")
         raise RuntimeError(f"Batch embedding failed: {str(e)}")
 
 
